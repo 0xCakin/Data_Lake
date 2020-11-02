@@ -55,27 +55,47 @@ def process_song_data(spark, input_data, output_data):
     songs_table.write.partitionBy('year', 'artist_id').parquet(os.path.join(output_data, 'songs.parquet'), 'overwrite')
 
     # extract columns to create artists table
-    artists_table = spark.sql()
+    artists_table = spark.sql("""
+                            SELECT DISTINCT artist_id, name, location, latitude, longitude
+                            FROM songs
+                            WHERE artist_id IS NOT NULL
+                        """)
     
     # write artists table to parquet files
-    artists_table
+    artists_table.write.parquet(output_data+'artists_table/')
 
 
 def process_log_data(spark, input_data, output_data):
+    """
+    DESCRIPTION:
+        Load log files and tables from S3, process data into output tables and write tables to s3
+
+    :param spark: spark session
+    :param input_data: s3 bucket input file path
+    :param output_data: s3 bucket output file path
+    :return: NONE
+    """
     # get filepath to log data file
-    log_data =
+    log_data = os.path.join(input_data, 'log_data/*.json')
 
     # read log data file
-    df = 
+    df = spark.read.json(log_data_path)
     
     # filter by actions for song plays
-    df = 
+    df = log_df.filter(log_df.page == 'NextSong')
 
-    # extract columns for users table    
-    artists_table = 
+    # create a view for spark sql
+    df.createOrReplaceTempView("log_table")
+
+    # extract columns for users table
+    user_table = spark.sql("""
+                        SELECT DISTINCT userId, firstName, lastName, gender, level
+                        FROM log_table
+                        WHERE userId IS NOT NULL
+                        """)
     
     # write users table to parquet files
-    artists_table
+    user_table.write.parquet(output_data+'user_table/')
 
     # create timestamp column from original timestamp column
     get_timestamp = udf()
