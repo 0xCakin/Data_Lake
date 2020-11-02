@@ -22,11 +22,11 @@
     - Log data: s3://udacity-dend/log_data
 2. Transform the data using Spark
     - Create five different tables
-    #### Fact Table
+#### Fact Table
 	 **songplays**  - data lives in log data.
     -   _songplay_id, start_time, user_id, level, song_id, artist_id, session_id, location, user_agent_
 
-	#### Dimension Tables
+#### Dimension Tables
 	 **users**  - users
 		Fields -   _user_id, first_name, last_name, gender, level_
 		
