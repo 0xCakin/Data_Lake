@@ -5,12 +5,11 @@ from pyspark.sql import SparkSession
 from pyspark.sql.functions import udf, col
 from pyspark.sql.functions import year, month, dayofmonth, hour, weekofyear, date_format
 
-
 config = configparser.ConfigParser()
 config.read('dl.cfg')
 
-os.environ['AWS_ACCESS_KEY_ID']=config['KEYS']['AWS_ACCESS_KEY_ID']
-os.environ['AWS_SECRET_ACCESS_KEY']=config['KEYS']['AWS_SECRET_ACCESS_KEY']
+os.environ['AWS_ACCESS_KEY_ID'] = config['KEYS']['AWS_ACCESS_KEY_ID']
+os.environ['AWS_SECRET_ACCESS_KEY'] = config['KEYS']['AWS_SECRET_ACCESS_KEY']
 
 
 def create_spark_session():
@@ -37,7 +36,7 @@ def process_song_data(spark, input_data, output_data):
 
     # get filepath to song data file
     song_data = os.path.join(input_data, "song_data/*/*/*/*.json")
-    
+
     # read song data file
     df = spark.read.json(song_data)
 
@@ -50,7 +49,7 @@ def process_song_data(spark, input_data, output_data):
                         FROM songs
                         WHERE song_id IS NOT NULL                         
                     """)
-    
+
     # write songs table to parquet files partitioned by year and artist
     songs_table.write.partitionBy('year', 'artist_id').parquet(os.path.join(output_data, 'songs.parquet'), 'overwrite')
 
@@ -60,9 +59,9 @@ def process_song_data(spark, input_data, output_data):
                             FROM songs
                             WHERE artist_id IS NOT NULL
                         """)
-    
+
     # write artists table to parquet files
-    artists_table.write.parquet(output_data+'artists_table/')
+    artists_table.write.parquet(output_data + 'artists_table/')
 
 
 def process_log_data(spark, input_data, output_data):
@@ -80,7 +79,7 @@ def process_log_data(spark, input_data, output_data):
 
     # read log data file
     df = spark.read.json(log_data_path)
-    
+
     # filter by actions for song plays
     df = log_df.filter(log_df.page == 'NextSong')
 
@@ -93,9 +92,9 @@ def process_log_data(spark, input_data, output_data):
                         FROM log_table
                         WHERE userId IS NOT NULL
                         """)
-    
+
     # write users table to parquet files
-    user_table.write.parquet(output_data+'user_table/')
+    user_table.write.parquet(output_data + 'user_table/')
 
     # extract columns to create time table
     time_table = spark.sql(""" 
@@ -111,14 +110,14 @@ def process_log_data(spark, input_data, output_data):
                                 FROM log_table
                                 WHERE log_table.ts IS NOT NULL ) as time_table 
                             """)
-    
+
     # write time table to parquet files partitioned by year and month
-    time_table.write.partitionBy("year", "month").parquet(output_data+'time_table/')
+    time_table.write.partitionBy("year", "month").parquet(output_data + 'time_table/')
 
     # read in song data to use for songplays table
-    song_df = spark.read.parquet(output_data+'songs_table/')
+    song_df = spark.read.parquet(output_data + 'songs_table/')
 
-    # extract columns from joined song and log datasets to create songplays table 
+    # extract columns from joined song and log datasets to create songplays table
     songplays_table = spark.sql("""
                                 SELECT  monotonically_increasing_id() as songplay_id,
                                         l.userId as user_id,
@@ -137,15 +136,15 @@ def process_log_data(spark, input_data, output_data):
     """)
 
     # write songplays table to parquet files partitioned by year and month
-    songplays_tablesongplays_table.write.partitionBy("year", "month").parquet(output_data+'songplays_table/')
+    songplays_tablesongplays_table.write.partitionBy("year", "month").parquet(output_data + 'songplays_table/')
 
 
 def main():
     spark = create_spark_session()
     input_data = "s3a://udacity-dend/"
     output_data = "s3a://spark-project-bucket/"
-    
-    process_song_data(spark, input_data, output_data)    
+
+    process_song_data(spark, input_data, output_data)
     process_log_data(spark, input_data, output_data)
 
 
