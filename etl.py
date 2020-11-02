@@ -14,6 +14,11 @@ os.environ['AWS_SECRET_ACCESS_KEY']=config['AWS_SECRET_ACCESS_KEY']
 
 
 def create_spark_session():
+    """
+    Description:
+        Create a spark session as hadoop
+    :return: A spark instance
+    """
     spark = SparkSession \
         .builder \
         .config("spark.jars.packages", "org.apache.hadoop:hadoop-aws:2.7.0") \
@@ -22,20 +27,35 @@ def create_spark_session():
 
 
 def process_song_data(spark, input_data, output_data):
+    """
+    Description:
+        Load the data provided, process song and artist dimension tables
+    :param spark: spark session
+    :param input_data: input file location
+    :param output_data: output file location
+    """
+
     # get filepath to song data file
-    song_data = 
+    song_data = os.path.join(input_data, "song_data/*/*/*/*.json")
     
     # read song data file
-    df = 
+    df = spark.read.json(song_data)
+
+    # create a view for spark sql
+    df.createOrReplaceTempView("songs")
 
     # extract columns to create songs table
-    songs_table = 
+    songs_table = spark.sql("""
+                        SELECT DISTINCT song_id, title, artist_id, artist_name, year, duration
+                        FROM songs
+                        WHERE song_id IS NOT NULL                         
+                    """)
     
     # write songs table to parquet files partitioned by year and artist
-    songs_table
+    songs_table.write.partitionBy('year', 'artist_id').parquet(os.path.join(output_data, 'songs.parquet'), 'overwrite')
 
     # extract columns to create artists table
-    artists_table = 
+    artists_table = spark.sql()
     
     # write artists table to parquet files
     artists_table
